@@ -101,5 +101,5 @@ plt.show()
 point_1 = torch.Tensor([6.0, -6.0])
 point_2 = torch.Tensor([2.0, 6.0])
 
-print ("Point A in the group:",  model.predict(new_point_1))
-print ("Point B in the group:", model.predict(new_point_2))
+print ("Point A in the group:",  model.predict(point_1))
+print ("Point B in the group:", model.predict(point_2))
