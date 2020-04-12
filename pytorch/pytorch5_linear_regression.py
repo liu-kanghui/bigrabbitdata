@@ -1,6 +1,6 @@
 '''
 Author: Kanghui Liu
-Date: 3/29/2020
+Date: 4/6/2020
 Reference: 
 1. https://github.com/MorvanZhou/PyTorch-Tutorial/blob/master/tutorial-contents/301_regression.py
 2. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/blob/master/PyTorch%20for%20Deep%20Learning%20and%20Computer%20Vision%20Course%20(All%20Codes)/Linear_Regression.ipynb
