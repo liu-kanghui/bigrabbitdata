@@ -2,8 +2,8 @@
 Author: Kanghui Liu
 Date: 4/6/2020
 Reference: 
-1. https://github.com/MorvanZhou/PyTorch-Tutorial/blob/master/tutorial-contents/302_classification.py
-2. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/blob/master/PyTorch%20for%20Deep%20Learning%20and%20Computer%20Vision%20Course%20(All%20Codes)/Perceptron.ipynb
+1. https://github.com/MorvanZhou/PyTorch-Tutorial/
+2. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/
 Standing on the shoulders of giants:)
 
 Blog Tutorial: https://www.bigrabbitdata.com/pytorch-6-binary-classification/
@@ -74,7 +74,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr = 0.05)
 
 X_tensor = torch.Tensor(X)
 y_tensor = torch.Tensor(y).reshape(100, 1)
-epochs = 5
+epochs = 500
 
 for e in range(epochs):
   y_pred = model.forward(X_tensor)
@@ -103,3 +103,4 @@ point_2 = torch.Tensor([2.0, 6.0])
 
 print ("Point A in the group:",  model.predict(point_1))
 print ("Point B in the group:", model.predict(point_2))
+
