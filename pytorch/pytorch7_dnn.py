@@ -1,6 +1,6 @@
 '''
 Author: Kanghui Liu
-Date: 4/6/2020
+Date: 4/11/2020
 Reference: 
 1. https://github.com/MorvanZhou/PyTorch-Tutorial/
 2. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/

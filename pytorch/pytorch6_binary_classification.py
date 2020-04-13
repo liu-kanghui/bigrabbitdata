@@ -58,23 +58,23 @@ def plot_graph():
             X[y == 0, 1],
             c='blue',
             marker='v',
-            label='cluster 1')
+            label='cluster 0')
 
   plt.scatter(X[y == 1,0],
               X[y == 1,1],
-              c='orange',
+              c='green',
               marker='o',
-              label='cluster 2')
+              label='cluster 1')
   plt.legend(loc='upper left')
 
 
 criterion = nn.BCELoss()
-optimizer = torch.optim.SGD(model.parameters(), lr = 0.05)
+optimizer = torch.optim.SGD(model.parameters(), lr = 0.1)
 
 
 X_tensor = torch.Tensor(X)
 y_tensor = torch.Tensor(y).reshape(100, 1)
-epochs = 500
+epochs = 100
 
 for e in range(epochs):
   y_pred = model.forward(X_tensor)
@@ -89,6 +89,7 @@ for e in range(epochs):
   plt.text(0.5, 0, 'epoch: %d, Loss=%.4f' %(e+1, loss.data.numpy()), 
             fontdict={'size': 10, 'color':  'red'})
 
+  plt.savefig("file%02d.png" % e)
   plt.pause(0.00001)
 
 
