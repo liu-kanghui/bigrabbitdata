@@ -33,8 +33,8 @@ print (type(square_image))
 
 # Convert np.array to tensor
 tensor_square_image = torch.Tensor(square_image)
-
 print (type(tensor_square_image))
+
 
 
 # convert tensor to PIL Image 
@@ -44,3 +44,7 @@ print (type(pil_image))
 # convert PIL Image to tensor
 back_to_tensor_image = ToTensor()(pil_image)
 print (type(back_to_tensor_image))
+
+
+print (tensor_square_image.shape)
+print (back_to_tensor_image.shape)
