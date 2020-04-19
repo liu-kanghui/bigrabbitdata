@@ -196,9 +196,12 @@ plt.imshow(img)
 # invert the back and white part 
 # so it matches with our training data
 img = PIL.ImageOps.invert(img)
-img = img.convert('1')
+
+# convert image to grey-scaled. 
+# so the color channel would be 1 
+img = img.convert('L')
 img = transform(img) 
-plt.imshow(img.numpy().reshape(28,28), cmap='gray')
+plt.imshow(transforms.ToPILImage()(img), cmap='gray')
 
 
 img = img.view(img.shape[0], -1)
