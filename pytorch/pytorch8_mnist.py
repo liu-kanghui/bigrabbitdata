@@ -1,3 +1,15 @@
+'''
+Author: Kanghui Liu
+Date: 4/18/2020
+Reference: 
+1. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/
+Standing on the shoulders of giants:)
+
+Blog Tutorial: https://www.bigrabbitdata.com/pytorch-8-image-recognition-mnist-datasets-multiclass-classification/
+Google Colab： https://colab.research.google.com/drive/1n_BpswwtxGve_kVxNm4qV3mk8nAomLwi 
+'''
+
+
 import torch
 import matplotlib.pyplot as plt 
 import numpy as np
