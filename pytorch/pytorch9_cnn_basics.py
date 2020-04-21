@@ -1,3 +1,16 @@
+'''
+Author: Kanghui Liu
+Date: 4/20/2020
+Reference: 
+1. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/
+Standing on the shoulders of giants:)
+
+Blog Tutorial: https://www.bigrabbitdata.com/pytorch-9-mnist-convolutional-neural-networks//
+Google Colab： https://colab.research.google.com/drive/1uubDjQIZHJ7Ku0CNfHwAEPuWgqlMhsZH
+'''
+
+
+
 import torch
 import matplotlib.pyplot as plt 
 import numpy as np
