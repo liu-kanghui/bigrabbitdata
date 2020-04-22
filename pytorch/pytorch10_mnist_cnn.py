@@ -1,12 +1,12 @@
 '''
 Author: Kanghui Liu
-Date: 4/18/2020
+Date: 4/22/2020
 Reference: 
 1. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/
 Standing on the shoulders of giants:)
 
-Blog Tutorial: https://www.bigrabbitdata.com/pytorch-8-image-recognition-mnist-datasets-multiclass-classification/
-Google Colab： https://colab.research.google.com/drive/1n_BpswwtxGve_kVxNm4qV3mk8nAomLwi 
+Blog Tutorial: https://www.bigrabbitdata.com/pytorch-10-mnist-with-convolutional-neural-network/
+Google Colab： https://colab.research.google.com/drive/1BHUG_CQmppo4O6hb8HN45RLcqyGIJBcV
 '''
 
 
@@ -33,38 +33,30 @@ training_dataset = datasets.MNIST(root='./mnist', train=True,
 validation_dataset = datasets.MNIST(root='./mnist', train=False, 
                                   download=True, transform= transform) 
 
-print ("length of training_dataset: ", len(training_dataset))
-print ("length of validation_dataset: ", len(validation_dataset))
-
-
-# Visualize training samples
-fig=plt.figure(figsize=(15, 5))
-
-for idx in range(1, 11):
-  fig.add_subplot(2, 5, idx)
-  # title is the image's label
-  plt.title(training_dataset[idx][1])
-  plt.imshow(transforms.ToPILImage()(training_dataset[idx][0]), cmap='gray')
-plt.tight_layout()
-plt.show()
-
 
 # Create our model
-class Model(nn.Module):
-    def __init__(self, input_size, h1, h2, output_size):
-        super().__init__() 
-        self.layer_1 = nn.Linear(input_size, h1)
-        self.layer_2 = nn.Linear(h1, h2)
-        self.layer_3 = nn.Linear(h2, output_size)
+class LeNet(nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.conv1 = nn.Conv2d(in_channels=1, out_channels= 6, kernel_size=5)
+      self.conv2 = nn.Conv2d(6, 16, 5)
+      self.fc1 = nn.Linear(4*4*16, 120)
+      self.fc2 = nn.Linear(120, 84)
+      self.output = nn.Linear(84, 10)
     def forward(self, x):
-        x = F.relu(self.layer_1(x))
-        x = F.relu(self.layer_2(x))
-        x = self.layer_3(x)
-        return x
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(x, 2, 2)
+      x = F.relu(self.conv2(x))
+      x = F.max_pool2d(x, 2, 2)
+      x = x.view(-1, 4*4*16)
+      x = F.relu(self.fc1(x))
+      x = F.relu(self.fc2(x))
+      x = self.output(x)
+      return x
 
 
 # Define our model 
-model = Model(784, 300, 100, 10)
+model = LeNet()
 print (model)
 
 
@@ -95,10 +87,7 @@ for e in range(epochs):
     
     # loop through 60000 samples 100 at a time
     for batch_idx, data in enumerate(training_loader, start=1):
-        # convert (100, 1, 28 , 28) to (100, 748)
-        # data[0] is the array containing 100(batch_size) number of 1*28*28
-        # data[1] is the array containing 100 number of lables
-        inputs = data[0].view(data[0].shape[0], -1)
+        inputs = data[0]
         labels = data[1]
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -135,7 +124,7 @@ for e in range(epochs):
         # reduce memory usage and speed up computations
         with torch.no_grad():
             for val_data in validation_loader:
-                val_inputs = val_data[0].view(val_data[0].shape[0], -1)
+                val_inputs = val_data[0]
                 val_labels = val_data[1]
                 val_outputs = model(val_inputs)
                 val_loss = criterion(val_outputs, val_labels)
@@ -166,12 +155,13 @@ for e in range(epochs):
 
 
 
+
 # Visualize predicted labels Vs. ground truth
 dataiter = iter(validation_loader)
 
 # Get one batch (100 samples) from validation dataset
 images, labels = dataiter.next()
-output = model(images.view(images.shape[0], -1))
+output = model(images)
 _, preds = torch.max(output, 1)
 
 fig = plt.figure(figsize=(10, 10))
@@ -203,10 +193,9 @@ img = img.convert('L')
 img = transform(img) 
 plt.imshow(transforms.ToPILImage()(img), cmap='gray')
 
-img = img.view(img.shape[0], -1)
-output = model(img)
+
+# add the batch dimension
+output = model(img.unsqueeze(0))
 _, pred = torch.max(output, 1)
 print("our predicted result is ", pred.item())
-
-
 
