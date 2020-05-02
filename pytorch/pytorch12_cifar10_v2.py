@@ -6,7 +6,7 @@ Reference:
 Standing on the shoulders of giants:)
 
 Blog Tutorial: https://www.bigrabbitdata.com/pytorch-12-hyperparameter-tuning-and-data-augmentation-to-improve-model-accuracy-on-cifar10/
-Google Colab： https://colab.research.google.com/drive/1Z2-exGWjy_-YbqoU0FM-oNIq79gkRoIz
+Google Colab： https://colab.research.google.com/drive/1Z2-exGWjy_-YbqoU0FM-oNIq79gkRoIz 
 '''
 
 
@@ -62,12 +62,12 @@ plt.show()
 class LeNet(nn.Module):
     def __init__(self):
       super().__init__()
-      self.conv1 = nn.Conv2d(in_channels=3, out_channels= 6, kernel_size=3, padding=1)
-      self.conv2 = nn.Conv2d(6, 16, 3, padding=1)
-      self.conv3 = nn.Conv2d(16, 32, 3, padding=1)
-      self.fc1 = nn.Linear(4*4*32, 120)
-      self.fc2 = nn.Linear(120, 84)
-      self.output = nn.Linear(84, 10)
+      self.conv1 = nn.Conv2d(in_channels=3, out_channels= 20, kernel_size=3, padding=1)
+      self.conv2 = nn.Conv2d(20, 40, 3, padding=1)
+      self.conv3 = nn.Conv2d(40, 80, 3, padding=1)
+      self.fc1 = nn.Linear(4*4*80, 500)
+      self.fc2 = nn.Linear(500, 200)
+      self.output = nn.Linear(200, 10)
     def forward(self, x):
       x = F.relu(self.conv1(x))
       x = F.max_pool2d(x, 2, 2)
@@ -75,7 +75,7 @@ class LeNet(nn.Module):
       x = F.max_pool2d(x, 2, 2)
       x = F.relu(self.conv3(x))
       x = F.max_pool2d(x, 2, 2)
-      x = x.view(-1, 4*4*32)
+      x = x.view(-1, 4*4*80)
       x = F.relu(self.fc1(x))
       x = F.relu(self.fc2(x))
       x = self.output(x)
@@ -209,7 +209,7 @@ for idx in np.arange(16):
   plt.imshow(transforms.ToPILImage()(images[idx].cpu()))
   ax.set_title("{} ({})".format(str(classes[preds[idx].item()]), 
                                 str(classes[labels[idx].item()])), 
-                                color=("green" if preds[isdx]==labels[idx] else "red")
+                                color=("green" if preds[idx]==labels[idx] else "red")
                                 )
 plt.show()
 

@@ -176,6 +176,7 @@ _, preds = torch.max(output, 1)
 
 fig = plt.figure(figsize=(10, 10))
 
+# Print the first 20 images
 for idx in range(1, 21):
     ax = fig.add_subplot(4, 5, idx)
     plt.title("{} ({})".format(str(preds[idx].item()), 
