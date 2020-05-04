@@ -83,7 +83,7 @@ print("last layer node: ", model.classifier[6].out_features)
 # Cross Entropy Loss with Adam Optimizer 
 criterion = nn.CrossEntropyLoss()
 # Feel Free to adjust the learning rate
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.00001)
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001)
 
 epochs = 10
 
