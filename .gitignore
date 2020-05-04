@@ -2,3 +2,4 @@ pictures/
 custom/
 pytorch/convert _img_to_vid.py
 ../mnist/
+../cifar10/
