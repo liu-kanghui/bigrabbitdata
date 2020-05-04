@@ -41,7 +41,7 @@ training_dataset = datasets.ImageFolder('doraemon_shinchan/train', transform=tra
 validation_dataset = datasets.ImageFolder('doraemon_shinchan/val', transform=transform)
 
 training_loader = torch.utils.data.DataLoader(training_dataset, batch_size=20, shuffle=True)
-validation_loader = torch.utils.data.DataLoader(validation_dataset , batch_size=20, shuffle=False)
+validation_loader = torch.utils.data.DataLoader(validation_dataset , batch_size=20, shuffle=True)
 
 print("Number of training data: ", len(training_dataset))
 print("Number of validation data: ", len(validation_dataset))
@@ -82,9 +82,10 @@ print("last layer node: ", model.classifier[6].out_features)
 
 # Cross Entropy Loss with Adam Optimizer 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+# Feel Free to adjust the learning rate
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.00001)
 
-epochs = 5
+epochs = 10
 
 train_corrects_history = []
 val_corrects_history = []
@@ -207,7 +208,7 @@ for idx in np.arange(16):
                                 str(classes[labels[idx].item()])), 
                                 color=("green" if preds[idx]==labels[idx] else "red")
                                 )
-
+plt.show()
 
 
 # Predict online images
@@ -215,6 +216,7 @@ url = 'https://gamerbraves.sgp1.cdn.digitaloceanspaces.com/2019/11/doraemon-nobi
 response = requests.get(url, stream = True)
 img = Image.open(response.raw)
 plt.imshow(img)
+plt.show()
 
 img = transform(img)
 img = img.unsqueeze(0).to(device)
