@@ -22,6 +22,8 @@ import PIL.ImageOps
 import requests
 from PIL import Image
 
+normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                     std=[0.247, 0.243, 0.261])
 
 # Data Augmentation to avoid overfitting
 transform_train = transforms.Compose([transforms.Resize((32,32)),
@@ -29,11 +31,13 @@ transform_train = transforms.Compose([transforms.Resize((32,32)),
                                       transforms.RandomRotation(10),
                                       transforms.RandomAffine(0, shear=10, scale=(0.8,1.2)),
                                       transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-                                      transforms.ToTensor()
+                                      transforms.ToTensor(),
+                                      normalize
                                ])
 
 transform  = transforms.Compose([transforms.Resize((32,32)),
-                                 transforms.ToTensor()
+                                 transforms.ToTensor(),
+                                 normalize
                                 ])
 
 training_dataset = datasets.CIFAR10(root='./cifar10', train=True, 
