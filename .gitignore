@@ -1,5 +1,7 @@
 pictures/
 custom/
-pytorch/convert _img_to_vid.py
 ../mnist/
 pytorch/cifar10/
+pytorch/dataset
+pytorch_gan/dataset
+pytorch_gan/*-result

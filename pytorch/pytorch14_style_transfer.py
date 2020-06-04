@@ -1,6 +1,10 @@
 '''
 Author: Kanghui Liu
 Date: 5/26/2020
+
+This is an Pytorch 1.6.0.dev20200526 implementation of 
+Style Transfer
+
 Reference: 
 1. https://github.com/rslim087a/PyTorch-for-Deep-Learning-and-Computer-Vision-Course-All-Codes-/
 Standing on the shoulders of giants:)
@@ -11,11 +15,12 @@ Google Colab： https://colab.research.google.com/drive/1t2wQeOTTlrLs9pq9J1zggmM
 
 
 import torch
+import torch.optim as optim
 from torchvision import transforms, models
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2 
+import requests
 
 
 # only use the feature extraction part 
@@ -70,7 +75,6 @@ def im_convert(tensor):
     return image
 
 
-#############     Display Content and Style for 5 seconds ##############
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 ax1.imshow(im_convert(content_image))
 ax1.axis("off")
