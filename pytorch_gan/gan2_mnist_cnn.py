@@ -214,7 +214,7 @@ for epoch in range(1, num_epochs+1):
         # Train discriminator to get better at differentiate real/fake data
         # 1.1 Train discriminator on real data
         d_real_predict = discriminator(data)
-        d_real_loss = criterion(d_real_predict.reshape(-1), true_label)
+        d_real_loss = criterion(d_real_predict, true_label)
   
 
         # 1.2 Train discriminator on fake data from generator
@@ -270,9 +270,9 @@ for epoch in range(1, num_epochs+1):
         label = 'Epoch {0}'.format(epoch)
         fig.text(0.5, 0.04, label, ha='center')
         plt.savefig(result_folder + "/gan%03d.png" % epoch)
-        # plt.show(block=False)
-        # plt.pause(1.5)
-        # plt.close(fig)
+        plt.show(block=False)
+        plt.pause(1.5)
+        plt.close(fig)
 
 
 # create gif, 2 frames per second
@@ -289,4 +289,4 @@ plt.plot(discriminator_loss_history, label='discriminator loss')
 plt.plot(generator_loss_history, label='generator loss')
 plt.legend()
 plt.savefig(result_folder + "/loss-history.png")
-# plt.show()
+plt.show()

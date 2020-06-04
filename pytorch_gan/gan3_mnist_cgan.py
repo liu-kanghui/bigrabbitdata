@@ -1,9 +1,14 @@
 '''
 Author: Kanghui Liu
-Date: 5/28/2020
+Date: 6/3/2020
+
+This is an Pytorch 1.6.0.dev20200526 implementation of 
+Conditional generative adversarial networks(CGANs) with MNIST/Fashin MNISt
+using Fully conneted neural network
 
 Blog in depth tutorial: https://www.bigrabbitdata.com/
 '''
+
 
 import torch
 import torchvision
@@ -12,41 +17,39 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
-import itertools
 
+import itertools
 import matplotlib.pyplot as plt 
 import numpy as np
+
+import subprocess
+import os
 
 
 class Discriminator(nn.Module):
     '''
         Discriminator model
-        mode: different classes from input
-        label_features: num features for label
     '''
-    def __init__(self, in_features, out_features, mode, label_features):
+    def __init__(self, in_features, out_features, mode):
         super().__init__()
 
-        self.embed_layer = nn.Embedding(mode, label_features)
+        torch.manual_seed(3)
+        self.embed_layer = nn.Embedding(mode, mode)     
 
         self.hidden_0 = nn.Sequential( 
-            nn.Linear(in_features + label_features, 1024),
-            nn.BatchNorm1d(1024),
+            nn.Linear(in_features + mode, 1024),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.Dropout(0.5),
         )
         self.hidden_1 = nn.Sequential(
             nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.Dropout(0.4)
         )
         self.hidden_2 = nn.Sequential(
             nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.Dropout(0.4)
         )
         self.out = nn.Sequential(
             torch.nn.Linear(256, out_features),
@@ -67,26 +70,27 @@ class Generator(nn.Module):
     '''
         Generator model
     '''
-    def __init__(self, in_features, out_features, mode, label_features):
+    def __init__(self, in_features, out_features, mode):
         super().__init__()
 
-        self.embed_layer = nn.Embedding(mode, label_features)
+        torch.manual_seed(3)
+        self.embed_layer = nn.Embedding(mode, mode)
+        # nn.init.uniform_(self.embed_layer.weight, -1.0, 1.0)
 
         self.hidden_0 = nn.Sequential(
-            nn.Linear(in_features + label_features,  256),
-            nn.ReLU(),
-            nn.Dropout(0.3)
-            
+            nn.Linear(in_features + mode, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU()
         )
         self.hidden_1 = nn.Sequential(            
             nn.Linear(256, 512),
-            nn.ReLU(),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(512),
+            nn.ReLU()
         )
         self.hidden_2 = nn.Sequential(
             nn.Linear(512, 1024),
-            nn.ReLU(),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(1024),
+            nn.ReLU()
         )
         self.out = nn.Sequential(
             nn.Linear(1024, out_features),
@@ -108,10 +112,8 @@ def noise(data_size):
     Generates data_size number of random noise
     '''
     noise_features = 100
-    # create a normal distribution of noise
     n = torch.randn(data_size, noise_features)
     return n
-
 
 def im_convert(tensor):
     '''
@@ -127,68 +129,71 @@ def im_convert(tensor):
 
 
 # Loading training dataset
+
 transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5,),(0.5,)),
     ])
 
-
-batch_size = 128
-mode = 10
-label_features = 10
 dataset = datasets.MNIST(root='dataset/', train=True, 
                         transform=transforms, download=True)
-dataloader = DataLoader(dataset, batch_size=batch_size, 
+dataloader = DataLoader(dataset, batch_size=128, 
                         drop_last=True,
                         shuffle=True)
 
-
-
 # Loading models
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Create discriminator and generator
+mode = 10
 discriminator = Discriminator(in_features=784, 
                               out_features=1,
-                              mode=mode,
-                              label_features=label_features).to(device)
-generator = Generator(in_features=100,
+                              mode=mode).to(device)
+generator = Generator(in_features=100, 
                       out_features=784,
-                      mode=mode,
-                      label_features=label_features).to(device)
+                      mode=mode).to(device)
 
-
-# Create 100 test_noise , 10 x  for each mode(label)
+# Create 100 test_noise for visualizing how well our model perform.
 test_noise = noise(100).to(device)
 test_label = torch.arange(mode).repeat_interleave(10).to(device)
 
 
-# Optimizers
+# Optimizers and loss
 lr = 0.0002
 optimizerD = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 optimizerG = optim.Adam(generator.parameters(), lr=lr, betas=(0.5, 0.999))
 criterion = nn.BCELoss()
 
-true_label = torch.ones(batch_size, 1).to(device)
-false_label = torch.zeros(batch_size, 1).to(device)
 
+# True and False Labels.  128 is the batch size
+true_label = torch.ones(128, 1).to(device)
+false_label = torch.zeros(128, 1).to(device)
+
+
+# Create folder to hold result
+result_folder = 'gan3-result'
+if not os.path.exists(result_folder ):
+    os.makedirs(result_folder )
 
 # Training in action
 print("Starting Training...")
 
-plt.ion()
-plt.show()
-num_epochs = 100
+num_epochs = 50
+discriminator_loss_history = []
+generator_loss_history = []
+
 for epoch in range(1, num_epochs+1):
-    for batch_idx, (data, real_label) in enumerate(dataloader):
+    discriminator_batch_loss = 0.0
+    generator_batch_loss = 0.0
+    for batch_idx, (data, targets) in enumerate(dataloader):
         data = data.to(device)
         batch_size = data.shape[0]
-        real_label = real_label.to(device)
-  
+        real_label = targets.to(device)
+
         discriminator.zero_grad()
 
         # Train discriminator to get better at differentiate real/fake data
-       
         # 1.1 Train discriminator on real data
         d_real_predict = discriminator(data.view(data.shape[0], -1), real_label)
         d_real_loss = criterion(d_real_predict, true_label)
@@ -196,15 +201,17 @@ for epoch in range(1, num_epochs+1):
 
         # 1.2 Train discriminator on fake data from generator
         d_fake_noise = noise(batch_size).to(device)
-        # Generate outputs and detach to avoid backward() on the Generator
+        # Generate outputs and detach to avoid training the Generator on these labels
         d_fake_input = generator(d_fake_noise, real_label).detach()
         d_fake_predict = discriminator(d_fake_input, real_label)
         d_fake_loss = criterion(d_fake_predict, false_label)
 
         # 1.3 combine real loss and fake loss for discriminator
         discriminator_loss = d_real_loss + d_fake_loss
+        discriminator_batch_loss += discriminator_loss.item()
         discriminator_loss.backward()
         optimizerD.step()
+
 
         # Train generator to get better at deceiving discriminator
         g_fake_noise = noise(batch_size).to(device)
@@ -213,14 +220,19 @@ for epoch in range(1, num_epochs+1):
         # Get prediction from discriminator
         g_fake_predict = discriminator(g_fake_input, real_label)
         generator_loss = criterion(g_fake_predict, true_label)
+        generator_batch_loss += generator_loss.item()
         generator_loss.backward()
         optimizerG.step()
 
-        if (batch_idx + 1) % 200 == 0:
+        # print loss every 100 batches
+        if (batch_idx + 1) % 100 == 0:
 
-            print(f'Epoch [{epoch}/{num_epochs}] Batch {batch_idx + 1}/{len(dataloader)} \
-                    Loss D: {discriminator_loss:.4f}, loss G: {generator_loss:.4f}')
+            print(f'Epoch [{epoch}/{num_epochs}]  Batch {batch_idx + 1}/{len(dataloader)} \
+                    Loss D: {discriminator_loss:.4f}, Loss G: {generator_loss:.4f}')
 
+
+    discriminator_loss_history.append(discriminator_batch_loss / (batch_idx + 1))
+    generator_loss_history.append(generator_batch_loss / (batch_idx + 1))
 
     with torch.no_grad():
         
@@ -240,8 +252,24 @@ for epoch in range(1, num_epochs+1):
 
         label = 'Epoch {0}'.format(epoch)
         fig.text(0.5, 0.04, label, ha='center')
-        plt.pause(0.001)
-        # plt.savefig("file%02d.png" % epoch)
+        plt.savefig(result_folder + "/gan%03d.png" % epoch)
+        plt.show(block=False)
+        plt.pause(1.5)
+        plt.close(fig)
 
 
-    
+# create gif, 2 frames per second
+subprocess.call([
+    'ffmpeg', '-framerate', '2', '-i', \
+    result_folder + '/gan%03d.png', result_folder+'/output.gif'
+])
+
+
+# plot discriminator and generator loss history
+# clear figure
+plt.clf()
+plt.plot(discriminator_loss_history, label='discriminator loss')
+plt.plot(generator_loss_history, label='generator loss')
+plt.savefig(result_folder + "/loss-history.png")
+plt.legend()
+plt.show()
