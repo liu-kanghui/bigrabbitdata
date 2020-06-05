@@ -1,6 +1,10 @@
 '''
 Author: Kanghui Liu
-Date: 5/30/2020
+Date: 6/5/2020
+
+This is an Pytorch 1.6.0.dev20200526 implementation of 
+Conditional generative adversarial networks(CGANs) with MNIST/Fashin MNISt
+using Deep convoluted neural network
 
 Blog in depth tutorial: https://www.bigrabbitdata.com/
 '''
@@ -26,105 +30,86 @@ class Discriminator(nn.Module):
     '''
         Discriminator model
     '''
-    def __init__(self, image_channels, features, mode, label_features):
+    def __init__(self, image_channels, features, mode):
         super().__init__()
 
-        # create 64 * 64 * 1 * 
-
-        self.embed_layer = nn.Embedding(mode, 32 * 32)
+        # extra label information
+        torch.manual_seed(3)
+        self.embed_layer = nn.Embedding(mode, 32*32)
         
-        # 64 is intput image size 
+        # 32 is input image size 
         self.conv_0 = nn.Sequential( 
-            # Batch_size x image_channels x 64 x 64
-            nn.Conv2d(image_channels, features, 
+            # Batch_size x image_channels x 32 x 32
+            nn.Conv2d(image_channels + 1, features, 
                       kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(features),
-    
+            nn.Dropout(0.5)
         )
 
         self.conv_1 = nn.Sequential(
-            # Batch_size x features  x 32 x 32
-            nn.Conv2d(features +1, features * 2, 
+            # Batch_size x features  x 16 x 16
+            nn.Conv2d(features, features * 2, 
                       kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(features*2)
+            nn.LeakyReLU(0.2)
         )
 
         self.conv_2 = nn.Sequential(
-            # Batch_size x (features * 2) x 16 x 16
+            # Batch_size x (features * 2) x 8 x 8
             nn.Conv2d(features * 2, features * 4, 
                       kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(features *4)
-        )
-
-        self.conv_3 = nn.Sequential(
-            # Batch_size x (features * 4) x 8 x 8
-            nn.Conv2d(features * 4, features * 8, 
-                      kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(features*8)
+            nn.BatchNorm2d(features*4),
+            nn.LeakyReLU(0.2)
         )
 
         self.out = nn.Sequential(
-             # Batch_size x (features * 8) x 4 x 4
-            nn.Conv2d(features * 8, image_channels, 
-                      kernel_size=4, stride=1, padding=0),
+             # Batch_size x (features * 4) x 4 x 4
+            nn.Conv2d(features * 4, 1, 
+                      kernel_size=4, stride=2, padding=0),
             # Batch x 1 x 1 x 1
             nn.Sigmoid()
         )
 
 
     def forward(self, x, label):
-        label = self.embed_layer(label).view(label.shape[0],
-                                             1, 32, 32)
-        x = self.conv_0(x)
-        # concate on the color channel
+        label = self.embed_layer(label).view(-1, 1, 32, 32)
+        # stack input and label on channel dimension
         x = torch.cat([x, label], dim=1)
-
+        x = self.conv_0(x)
         x = self.conv_1(x)
         x = self.conv_2(x)
-        x = self.conv_3(x)
         x = self.out(x)
-        return x
+        # reduce the dimension from 128x1x1x1 to 128
+        return torch.squeeze(x)
 
 
 class Generator(nn.Module):
     '''
         Generator model
     '''
-    def __init__(self, channels_noise, image_channels, features, mode, label_features):
+    def __init__(self, noise_features, image_channels, features, mode):
         super().__init__()
 
-        self.embed_layer = nn.Embedding(mode, 10)
+        torch.manual_seed(3)
+        self.embed_layer = nn.Embedding(mode, mode)
 
         self.deconv_0 = nn.Sequential(
-            # Batch_size x channels_noise x 1 x 1
-            nn.ConvTranspose2d(channels_noise + 10, features * 8, 
+            # Batch_size x noise_features x 1 x 1
+            nn.ConvTranspose2d(noise_features + mode, features * 4, 
                                kernel_size=4, stride=1, padding=0),
-            nn.BatchNorm2d(features * 8),
-            nn.ReLU()
-        )
-
-        self.deconv_1 = nn.Sequential(     
-            # Batch x  (features * 8) x 4 x 4     
-            nn.ConvTranspose2d(features * 8, features * 4, 
-                               kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(features * 4),
             nn.ReLU()
         )
 
-        self.deconv_2 = nn.Sequential(
-            # Batch x (features * 4) x 8 x 8 
+        self.deconv_1 = nn.Sequential(     
+            # Batch x  (features * 4) x 4 x 4     
             nn.ConvTranspose2d(features * 4, features * 2, 
-                               kernel_size=4, stride=2,  padding=1),
+                               kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(features * 2),
             nn.ReLU()
         )
 
-        self.deconv_3 = nn.Sequential(
-            # Batch x (features * 2) x 16 x 16 
+        self.deconv_2 = nn.Sequential(
+            # Batch x (features * 2) x 8 x 8 
             nn.ConvTranspose2d(features * 2, features, 
                                kernel_size=4, stride=2,  padding=1),
             nn.BatchNorm2d(features),
@@ -132,24 +117,22 @@ class Generator(nn.Module):
         )
 
         self.out = nn.Sequential(
-            # Batch x (features) x 32 x 32
+            # Batch x (features) x 16 x 16
             nn.ConvTranspose2d(features, image_channels, 
                                kernel_size=4, stride=2, padding=1),
-            # Batch x image_channels X 64 X 64
+            # Batch x image_channels X 32 X 32
             nn.Tanh()
         )
 
     def forward(self, x, label):
-        label = self.embed_layer(label).view(label.shape[0],
-                                             10 , 1, 1)
-        # concate on the color channel
+        label = self.embed_layer(label).view(x.shape[0], -1, 1, 1)
         x = torch.cat([x, label], dim=1)
         x = self.deconv_0(x)
         x = self.deconv_1(x)
         x = self.deconv_2(x)
-        x = self.deconv_3(x)
         x = self.out(x)
         return x
+
 
 
 noise_features = 100
@@ -177,15 +160,12 @@ def im_convert(tensor):
 # Loading training dataset
 
 transforms = transforms.Compose([
-    transforms.Resize(64),
+    transforms.Resize(32),
     transforms.ToTensor(),
     transforms.Normalize((0.5,),(0.5,)),
     ])
 
-
-mode = 10
-label_features = 10
-dataset = datasets.FashionMNIST(root='dataset/', train=True, 
+dataset = datasets.MNIST(root='dataset/', train=True, 
                         transform=transforms, download=True)
 dataloader = DataLoader(dataset, batch_size=128, 
                         drop_last=True,
@@ -197,20 +177,20 @@ dataloader = DataLoader(dataset, batch_size=128,
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+mode = 10
 # Create discriminator and generator
-discriminator = Discriminator(image_channels=1,
-                              features = 10,
-                              mode=mode,
-                              label_features=label_features).to(device)
+discriminator = Discriminator(image_channels=1, 
+                               features=10,
+                               mode=mode).to(device)
 generator = Generator(noise_features, 
                       image_channels=1, 
                       features=10,
-                      mode=mode,
-                      label_features=label_features).to(device)
+                      mode=mode).to(device)
 
 # Create 100 test_noise for visualizing how well our model perform.
 test_noise = noise(100).to(device)
 test_label = torch.arange(mode).repeat_interleave(10).to(device)
+
 
 # Optimizers
 lr = 0.0002
@@ -232,7 +212,7 @@ if not os.path.exists(result_folder ):
 # Training in action
 print("Starting Training...")
 
-num_epochs = 50
+num_epochs = 35
 discriminator_loss_history = []
 generator_loss_history = []
 
@@ -240,17 +220,17 @@ for epoch in range(1, num_epochs+1):
     discriminator_batch_loss = 0.0
     generator_batch_loss = 0.0
 
-    for batch_idx, (data, real_label) in enumerate(dataloader):
+    for batch_idx, (data, targets) in enumerate(dataloader):
         data = data.to(device)
         batch_size = data.shape[0]
-        real_label = real_label.to(device)
+        real_label = targets.to(device)
 
         discriminator.zero_grad()
 
         # Train discriminator to get better at differentiate real/fake data
         # 1.1 Train discriminator on real data
         d_real_predict = discriminator(data, real_label)
-        d_real_loss = criterion(d_real_predict.reshape(-1), true_label)
+        d_real_loss = criterion(d_real_predict, true_label)
   
 
         # 1.2 Train discriminator on fake data from generator
@@ -258,7 +238,7 @@ for epoch in range(1, num_epochs+1):
         # Generate outputs and detach to avoid training the Generator on these labels
         d_fake_input = generator(d_fake_noise, real_label).detach()
         d_fake_predict = discriminator(d_fake_input, real_label)
-        d_fake_loss = criterion(d_fake_predict.reshape(-1), false_label)
+        d_fake_loss = criterion(d_fake_predict, false_label)
 
         # 1.3 combine real loss and fake loss for discriminator
         discriminator_loss = d_real_loss + d_fake_loss
@@ -273,7 +253,7 @@ for epoch in range(1, num_epochs+1):
         generator.zero_grad()
         # Get prediction from discriminator
         g_fake_predict = discriminator(g_fake_input, real_label)
-        generator_loss = criterion(g_fake_predict.reshape(-1), true_label)
+        generator_loss = criterion(g_fake_predict, true_label)
         generator_batch_loss += generator_loss.item()
         generator_loss.backward()
         optimizerG.step()
@@ -306,9 +286,9 @@ for epoch in range(1, num_epochs+1):
         label = 'Epoch {0}'.format(epoch)
         fig.text(0.5, 0.04, label, ha='center')
         plt.savefig(result_folder + "/gan%03d.png" % epoch)
-        plt.show(block=False)
-        plt.pause(1.5)
-        plt.close(fig)
+        # plt.show(block=False)
+        # plt.pause(1.5)
+        # plt.close(fig)
 
 
 # create gif, 2 frames per second
@@ -323,6 +303,6 @@ subprocess.call([
 plt.clf()
 plt.plot(discriminator_loss_history, label='discriminator loss')
 plt.plot(generator_loss_history, label='generator loss')
-plt.savefig(result_folder + "/loss-history.png")
 plt.legend()
-plt.show()
+plt.savefig(result_folder + "/loss-history.png")
+# plt.show()
