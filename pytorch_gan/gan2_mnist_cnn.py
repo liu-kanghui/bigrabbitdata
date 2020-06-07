@@ -154,7 +154,7 @@ transforms = transforms.Compose([
     transforms.Normalize((0.5,),(0.5,)),
     ])
 
-dataset = datasets.MNIST(root='dataset/', train=True, 
+dataset = datasets.CelebA(root='dataset/', split='train', 
                         transform=transforms, download=True)
 dataloader = DataLoader(dataset, batch_size=128, 
                         drop_last=True,

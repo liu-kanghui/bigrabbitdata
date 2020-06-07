@@ -5,3 +5,4 @@ pytorch/cifar10/
 pytorch/dataset
 pytorch_gan/dataset
 pytorch_gan/*-result
+pytorch_gan/gan4_face_aging

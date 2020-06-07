@@ -205,7 +205,7 @@ false_label = torch.zeros(128).to(device)
 
 
 # Create folder to hold result
-result_folder = 'gan4-result'
+result_folder = 'gan3-1-result'
 if not os.path.exists(result_folder ):
     os.makedirs(result_folder )
 
