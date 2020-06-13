@@ -2,6 +2,8 @@ pictures/
 custom/
 pytorch-intro/cifar10/
 pytorch-intro/dataset/
+pytorch-intro/mnist
+pytorch-intro/cifar
 pytorch-gan/dataset/
 pytorch-gan/gan4_face_aging
 pytorch-nlp
