@@ -7,3 +7,4 @@ pytorch-intro/cifar
 pytorch-gan/dataset/
 pytorch-gan/gan4_face_aging
 pytorch-nlp
+.ipynb_checkpoints
